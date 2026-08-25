@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum GameVariant {
+  NL
+  KKD
+  BE
+  INT
+  EUR
+  INTERLANDS
+}
+
+enum StrategyType {
+  SAFE
+  BALANCED
+  AGGRESSIVE
+}
+
+model Competition {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  gameVariant GameVariant
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  matches     Match[]
+}
+
+model Team {
+  id         String   @id @default(cuid())
+  externalId String?
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  homeMatches Match[] @relation("homeTeam")
+  awayMatches Match[] @relation("awayTeam")
+}
+
+model Match {
+  id             String         @id @default(cuid())
+  externalId     String?
+  competitionId  String
+  homeTeamId     String
+  awayTeamId     String
+  kickoffUtc     DateTime
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  competition    Competition    @relation(fields: [competitionId], references: [id])
+  homeTeam       Team           @relation("homeTeam", fields: [homeTeamId], references: [id])
+  awayTeam       Team           @relation("awayTeam", fields: [awayTeamId], references: [id])
+  oddsSnapshots  OddsSnapshot[]
+  predictions    Prediction[]
+}
+
+model OddsSnapshot {
+  id          String   @id @default(cuid())
+  matchId     String
+  roundCode   String
+  capturedAt  DateTime @default(now())
+  oneXTwoHome Float
+  oneXTwoDraw Float
+  oneXTwoAway Float
+  over25      Float?
+  under25     Float?
+  bttsYes     Float?
+  bttsNo      Float?
+  createdAt   DateTime @default(now())
+  match       Match    @relation(fields: [matchId], references: [id])
+
+  @@index([roundCode])
+  @@index([matchId, capturedAt])
+}
+
+model Prediction {
+  id               String   @id @default(cuid())
+  matchId          String
+  roundCode        String
+  modelVersion     String
+  recommendedScore String
+  safeScore        String
+  balancedScore    String
+  aggressiveScore  String
+  createdAt        DateTime @default(now())
+  match            Match    @relation(fields: [matchId], references: [id])
+
+  @@index([roundCode])
+}
+
+model SyncJob {
+  id             String   @id @default(cuid())
+  roundCode      String
+  source         String
+  syncedAt       DateTime @default(now())
+  matchesCount   Int
+  playersCount   Int
+  predictionsCount Int
+  notes          String?
+
+  @@index([syncedAt])
+}

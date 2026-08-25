@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Scorito MatchKing Advisor
 
-## Getting Started
+Lokale webapp voor MatchKing advies op basis van odds, met opslag in SQLite via Prisma.
 
-First, run the development server:
+## Stack
+
+- Next.js 15
+- React + TypeScript
+- TailwindCSS
+- Prisma
+- SQLite (lokaal)
+
+## Lokale setup
+
+1. Installeer dependencies:
+
+```bash
+npm install
+```
+
+2. Vul je API keys in in .env:
+
+```env
+ENABLE_EXTERNAL_SYNC="true"
+API_FOOTBALL_KEY="jouw_key"
+ODDS_API_KEY="jouw_key"
+```
+
+`ENABLE_EXTERNAL_SYNC` wordt in de app altijd als `true` behandeld.
+
+3. Maak of update je lokale database:
+
+```bash
+npx prisma migrate dev
+```
+
+4. Start de app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Na opstarten:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- De homepage probeert automatisch een eerste sync te doen als de lokale data nog leeg is.
+- Je kunt altijd handmatig syncen met de knop "Sync nu via API" op de homepage.
+- Je hebt nu aparte pagina's voor NL, KKD, BE en INT.
+- Op elke variantpagina kun je via "Kies speelronde" wisselen tussen speelrondes op basis van kickoff-datums.
+- Elke speelronde toont nu ook een datumrange (bijv. `16 aug - 18 aug`).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Belangrijke lokale commando'**s**
 
-## Learn More
+- Handmatige sync via script (optioneel, meestal niet nodig):
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run sync:local
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Variant-specifieke sync (bijvoorbeeld KKD):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run sync:local -- KKD
+```
 
-## Deploy on Vercel
+- Sync via API endpoint (de knop gebruikt dit endpoint):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+curl -X POST http://localhost:3000/api/sync
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Validatie:
+
+```bash
+npm run lint
+npm run test
+npm run build
+```
+
+## API endpoints
+
+- GET /api/dashboard
+- GET /api/predictions
+- GET /api/scenarios
+- GET /api/scorers
+- POST /api/sync
+
+## Opmerking over deployment
+
+Deze setup is bedoeld voor lokaal gebruik. Deployment is niet nodig om de API-gebaseerde adviezen te gebruiken.
