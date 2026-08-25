@@ -1,6 +1,8 @@
 import { getLocalStatus } from "@/application/services/status-service";
 import { ConnectionTestPanel } from "@/app/status/connection-test-panel";
 
+export const dynamic = "force-dynamic";
+
 function Badge({ ok }: { ok: boolean }) {
   return (
     <span
