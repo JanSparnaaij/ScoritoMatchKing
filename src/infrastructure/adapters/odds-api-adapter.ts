@@ -35,7 +35,7 @@ const RESPONSE_CACHE_TTL_MS = 10 * 60 * 1000;
 const responseCache = new Map<string, { expiresAt: number; payload: unknown }>();
 
 export class OddsApiQuotaError extends Error {
-  constructor(message = "Odds API dagelijkse quota (500) is bereikt. Wacht tot morgen of upgrade je plan.") {
+  constructor(message = "Odds API maandelijkse quota (500) is bereikt. Wacht tot je monthly reset of upgrade je plan.") {
     super(message);
     this.name = "OddsApiQuotaError";
   }
