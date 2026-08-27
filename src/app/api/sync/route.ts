@@ -2,6 +2,8 @@ import { runLocalSync } from "@/application/services/sync-service";
 import { GameVariant } from "@/domain/enums";
 import { container } from "@/infrastructure/di/container";
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   try {
     const payload = (await request.json().catch(() => ({}))) as { variant?: GameVariant };
