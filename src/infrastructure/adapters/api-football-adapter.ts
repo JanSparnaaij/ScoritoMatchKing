@@ -63,7 +63,10 @@ async function fetchDateWindowFixturesWithOdds(scope?: SyncScope): Promise<Match
       totalPages = payload.paging?.total ?? 1;
 
       for (const entry of payload.response ?? []) {
-        const variant = detectVariant(entry.league?.name ?? "");
+        const leagueId = entry.league?.id;
+        if (typeof leagueId !== "number") continue;
+
+        const variant = LEAGUE_ID_TO_VARIANT[leagueId];
         if (!variant) continue;
         if (scope?.variant && variant !== scope.variant) continue;
 
@@ -168,63 +171,28 @@ async function requestApiFootball<T>(path: string): Promise<T> {
   return payload as T;
 }
 
-function detectVariant(competitionName: string): GameVariant | null {
-  const lower = competitionName.toLowerCase();
-
-  if (NL_COMPETITION_MATCHERS.some((matcher) => lower.includes(matcher))) {
-    return GameVariant.NL;
-  }
-
-  if (KKD_COMPETITION_MATCHERS.some((matcher) => lower.includes(matcher))) {
-    return GameVariant.KKD;
-  }
-
-  if (BE_COMPETITION_MATCHERS.some((matcher) => lower.includes(matcher))) {
-    return GameVariant.BE;
-  }
-
-  if (EUR_COMPETITION_MATCHERS.some((matcher) => lower.includes(matcher))) {
-    return GameVariant.EUR;
-  }
-
-  if (INTERLANDS_COMPETITION_MATCHERS.some((matcher) => lower.includes(matcher))) {
-    return GameVariant.INTERLANDS;
-  }
-
-  if (INT_COMPETITION_MATCHERS.some((matcher) => lower.includes(matcher))) {
-    return GameVariant.INT;
-  }
-
-  return null;
-}
-
-const NL_COMPETITION_MATCHERS = ["eredivisie"];
-
-const KKD_COMPETITION_MATCHERS = ["keuken kampioen", "eerste divisie", "eerste divisie a"];
-
-const BE_COMPETITION_MATCHERS = ["pro league", "first division a", "jupiler pro league"];
-
-const INT_COMPETITION_MATCHERS = [
-  "premier league",
-  "la liga",
-  "segunda division",
-  "bundesliga",
-  "ligue 1",
-  "serie a",
-];
-
-const EUR_COMPETITION_MATCHERS = [
-  "champions league",
-  "europa league",
-  "conference league",
-];
-
-const INTERLANDS_COMPETITION_MATCHERS = [
-  "nations league",
-  "world cup",
-  "euro championship",
-  "european championship",
-  "wk-kwalificatie",
-  "ek-kwalificatie",
-  "qualification",
-];
+const LEAGUE_ID_TO_VARIANT: Record<number, GameVariant> = {
+  // NL
+  88: GameVariant.NL,             // Eredivisie
+  // KKD
+  89: GameVariant.KKD,            // Eerste Divisie
+  // BE
+  144: GameVariant.BE,            // Jupiler Pro League
+  // INT (top-5 Europese club-competities)
+  39: GameVariant.INT,             // Premier League (Engeland)
+  140: GameVariant.INT,            // La Liga (Spanje)
+  141: GameVariant.INT,            // La Liga 2 / Segunda (Spanje)
+  78: GameVariant.INT,             // Bundesliga (Duitsland)
+  61: GameVariant.INT,             // Ligue 1 (Frankrijk)
+  135: GameVariant.INT,            // Serie A (Italië)
+  // EUR (Europese club-cups)
+  2: GameVariant.EUR,              // UEFA Champions League
+  3: GameVariant.EUR,              // UEFA Europa League
+  848: GameVariant.EUR,            // UEFA Europa Conference League
+  // INTERLANDS (landenteams)
+  5: GameVariant.INTERLANDS,       // UEFA Nations League
+  1: GameVariant.INTERLANDS,       // FIFA World Cup
+  32: GameVariant.INTERLANDS,      // World Cup Qualifier Europe
+  4: GameVariant.INTERLANDS,       // UEFA European Championship
+  960: GameVariant.INTERLANDS,     // Euro Championship Qualification
+};
