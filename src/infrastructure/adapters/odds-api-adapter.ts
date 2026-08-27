@@ -47,32 +47,25 @@ export class OddsApiAdapter implements MatchDataProvider, OddsDataProvider {
   private readonly fallbackOddsByMatchId = new Map<string, OneXTwo>();
 
   async getUpcomingMatches(scope?: SyncScope): Promise<MatchInput[]> {
-    let events = await this.loadCurrentRoundEvents(scope);
+    let events: CachedEvent[] = [];
+    let oddsApiFailed = false;
 
-    if (events.length === 0 && scope?.variant === GameVariant.KKD) {
-      const fallbackMatches = await this.apiFootballAdapter.getUpcomingMatches({ variant: GameVariant.KKD });
-      this.fallbackOddsByMatchId.clear();
+    try {
+      events = await this.loadCurrentRoundEvents(scope);
+    } catch (error) {
+      oddsApiFailed = true;
+      const reason = error instanceof OddsApiQuotaError ? "quota bereikt" : `faalde (${error instanceof Error ? error.message : "onbekend"})`;
+      console.log(`[odds-api] ${reason}, val terug op API-Football`);
+    }
 
-      events = fallbackMatches.map((match) => {
-        this.fallbackOddsByMatchId.set(match.id, match.oneXTwoOdds);
-
-        return {
-          id: match.id,
-          sportKey: "soccer_netherlands_eerste_divisie_api_football",
-          sportTitle: match.competition,
-          variant: GameVariant.KKD,
-          commenceTime: match.kickOffUtc,
-          homeTeam: match.homeTeam,
-          awayTeam: match.awayTeam,
-          oneXTwo: match.oneXTwoOdds,
-          over25Odds: match.over25Odds,
-          under25Odds: match.under25Odds,
-          bttsYesOdds: match.bttsYesOdds,
-          bttsNoOdds: match.bttsNoOdds,
-        } satisfies CachedEvent;
-      });
-
-      this.cachedEvents = new Map(events.map((event) => [event.id, event]));
+    if (events.length === 0 || oddsApiFailed) {
+      try {
+        return await this.loadFromApiFootballFallback(scope);
+      } catch (fallbackError) {
+        if (oddsApiFailed) {
+          throw fallbackError;
+        }
+      }
     }
 
     return events.map((event) => ({
@@ -90,16 +83,41 @@ export class OddsApiAdapter implements MatchDataProvider, OddsDataProvider {
     }));
   }
 
+  private async loadFromApiFootballFallback(scope?: SyncScope): Promise<MatchInput[]> {
+    const fallbackMatches = await this.apiFootballAdapter.getUpcomingMatches(scope);
+    this.fallbackOddsByMatchId.clear();
+
+    const events: CachedEvent[] = fallbackMatches.map((match) => {
+      this.fallbackOddsByMatchId.set(match.id, match.oneXTwoOdds);
+      return {
+        id: match.id,
+        sportKey: `api_football_${match.variant.toLowerCase()}`,
+        sportTitle: match.competition,
+        variant: match.variant,
+        commenceTime: match.kickOffUtc,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        oneXTwo: match.oneXTwoOdds,
+        over25Odds: match.over25Odds,
+        under25Odds: match.under25Odds,
+        bttsYesOdds: match.bttsYesOdds,
+        bttsNoOdds: match.bttsNoOdds,
+      } satisfies CachedEvent;
+    });
+
+    this.cachedEvents = new Map(events.map((event) => [event.id, event]));
+    return fallbackMatches;
+  }
+
   async getLatestOdds(matchIds: string[], scope?: SyncScope) {
     if (!env.ENABLE_EXTERNAL_SYNC) {
       throw new Error("ENABLE_EXTERNAL_SYNC staat uit");
     }
 
-    if (!env.ODDS_API_KEY) {
-      throw new Error("ODDS_API_KEY ontbreekt voor odds ophalen");
-    }
-
-    if (this.cachedEvents.size === 0) {
+    if (this.cachedEvents.size === 0 && this.fallbackOddsByMatchId.size === 0) {
+      if (!env.ODDS_API_KEY) {
+        throw new Error("ODDS_API_KEY ontbreekt voor odds ophalen");
+      }
       await this.loadCurrentRoundEvents(scope);
     }
 

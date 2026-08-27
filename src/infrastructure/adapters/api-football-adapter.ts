@@ -32,16 +32,24 @@ export class ApiFootballAdapter implements MatchDataProvider {
 
     const rawMatches = await fetchRoundScopedFixtures(scope);
 
-    const oddsRows = await Promise.all(
-      rawMatches.map(async (item) => ({
-        fixtureId: String(item.fixture.id),
-        odds: await fetchOneXTwoOddsFromApiFootball(item.fixture.id),
-      })),
-    );
+    const capped = rawMatches
+      .slice()
+      .sort((a, b) => Date.parse(a.fixture.date) - Date.parse(b.fixture.date))
+      .slice(0, API_FOOTBALL_FIXTURE_LIMIT);
 
-    const oddsMap = new Map(oddsRows.map((row) => [row.fixtureId, row.odds]));
+    const oddsMap = new Map<string, { home: number; draw: number; away: number }>();
+    for (const item of capped) {
+      try {
+        const odds = await fetchOneXTwoOddsFromApiFootball(item.fixture.id);
+        if (odds) {
+          oddsMap.set(String(item.fixture.id), odds);
+        }
+      } catch {
+        // Skip fixtures without odds; continue with the rest.
+      }
+    }
 
-    const matches = rawMatches
+    const matches = capped
       .map((item) => {
         const odds = oddsMap.get(String(item.fixture.id));
         if (!odds) {
@@ -68,6 +76,8 @@ export class ApiFootballAdapter implements MatchDataProvider {
     return matches;
   }
 }
+
+const API_FOOTBALL_FIXTURE_LIMIT = 6;
 
 async function fetchOneXTwoOddsFromApiFootball(fixtureId: number) {
   const payload = await requestApiFootball<{
@@ -132,26 +142,45 @@ async function requestApiFootball<T>(path: string): Promise<T> {
 }
 
 async function fetchRoundScopedFixtures(scope?: SyncScope): Promise<ApiFixtureRow[]> {
-  const targetLeagues = await resolveTargetLeagues(scope);
-
-  const annotated = (await Promise.all(targetLeagues.map((league) => fetchFixturesForLeague(league)))).flat();
-
-  if (annotated.length === 0) {
-    throw new Error("Geen fixtures gevonden voor NL/KKD/BE/INT/EUR/INTERLANDS competitie-selectie");
-  }
-
-  const variants = scope?.variant
-    ? [scope.variant]
-    : [GameVariant.NL, GameVariant.KKD, GameVariant.BE, GameVariant.INT, GameVariant.EUR, GameVariant.INTERLANDS];
-
-  const byVariant = variants.flatMap((variant) => {
-    const rows = annotated.filter((entry) => entry.variant === variant);
-    return selectPrimaryRoundsPerLeague(rows);
+  const today = new Date();
+  const dates = [0, 1, 2].map((offset) => {
+    const d = new Date(today);
+    d.setUTCDate(d.getUTCDate() + offset);
+    return d.toISOString().slice(0, 10);
   });
 
-  const deduped = dedupeFixtures(byVariant);
+  const payloads = await Promise.all(
+    dates.map((date) =>
+      requestApiFootball<{
+        response?: Array<{
+          fixture: { id: number; date: string };
+          league: { id: number; name: string; season: number; round?: string };
+          teams: {
+            home: { name: string };
+            away: { name: string };
+          };
+        }>;
+      }>(`/fixtures?date=${date}`).catch(() => ({ response: [] })),
+    ),
+  );
+
+  const rawRows = payloads.flatMap((payload) => payload.response ?? []);
+
+  const annotated: ApiFixtureRow[] = rawRows
+    .map((row) => {
+      const variant = detectVariant(row.league.name);
+      if (!variant) {
+        return null;
+      }
+      return { ...row, variant } satisfies ApiFixtureRow;
+    })
+    .filter((entry): entry is ApiFixtureRow => entry !== null);
+
+  const filtered = scope?.variant ? annotated.filter((entry) => entry.variant === scope.variant) : annotated;
+
+  const deduped = dedupeFixtures(filtered);
   if (deduped.length === 0) {
-    throw new Error("Geen ronde-fixtures gevonden voor de gekozen varianten");
+    throw new Error("Geen fixtures gevonden binnen 3-daagse window voor de gekozen varianten (Free-tier limiet API-Football)");
   }
 
   return deduped;
