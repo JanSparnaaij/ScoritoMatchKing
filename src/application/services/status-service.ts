@@ -14,7 +14,6 @@ export async function getLocalStatus() {
     keys: {
       apiFootball: isConfigured(process.env.API_FOOTBALL_KEY),
       oddsApi: isConfigured(process.env.ODDS_API_KEY),
-      footballData: isConfigured(process.env.FOOTBALL_DATA_API_KEY),
     },
     externalSyncEnabled: process.env.ENABLE_EXTERNAL_SYNC === "true",
     latestSync: latestSync
@@ -42,21 +41,18 @@ type ProbeResult = {
   testedAt: string;
   apiFootball: ProviderProbe;
   oddsApi: ProviderProbe;
-  footballData: ProviderProbe;
 };
 
 export async function testApiConnections(): Promise<ProbeResult> {
-  const [apiFootball, oddsApi, footballData] = await Promise.all([
+  const [apiFootball, oddsApi] = await Promise.all([
     probeApiFootball(),
     probeOddsApi(),
-    probeFootballData(),
   ]);
 
   return {
     testedAt: new Date().toISOString(),
     apiFootball,
     oddsApi,
-    footballData,
   };
 }
 
@@ -88,23 +84,6 @@ async function probeOddsApi(): Promise<ProviderProbe> {
   const safeKey = key as string;
 
   return runProbe(`${baseUrl}/sports/?apiKey=${encodeURIComponent(safeKey)}`);
-}
-
-async function probeFootballData(): Promise<ProviderProbe> {
-  const key = process.env.FOOTBALL_DATA_API_KEY;
-  const baseUrl = process.env.FOOTBALL_DATA_BASE_URL ?? "https://api.football-data.org/v4";
-
-  if (!isConfigured(key)) {
-    return notConfigured("FOOTBALL_DATA_API_KEY ontbreekt");
-  }
-
-  const safeKey = key as string;
-
-  return runProbe(`${baseUrl}/competitions?limit=1`, {
-    headers: {
-      "X-Auth-Token": safeKey,
-    },
-  });
 }
 
 async function runProbe(

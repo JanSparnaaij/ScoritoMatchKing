@@ -14,7 +14,6 @@ type ProbeResult = {
   testedAt: string;
   apiFootball: ProviderProbe;
   oddsApi: ProviderProbe;
-  footballData: ProviderProbe;
 };
 
 function ProbeCard({ label, probe }: { label: string; probe: ProviderProbe }) {
@@ -83,10 +82,9 @@ export function ConnectionTestPanel() {
       {result ? <p className="mb-3 text-xs text-slate-500">Last test: {result.testedAt}</p> : null}
 
       {result ? (
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2">
           <ProbeCard label="API-Football" probe={result.apiFootball} />
           <ProbeCard label="The Odds API" probe={result.oddsApi} />
-          <ProbeCard label="Football-Data" probe={result.footballData} />
         </div>
       ) : (
         <p className="text-sm text-slate-600">Run test om live connectivity en key-validatie te zien.</p>

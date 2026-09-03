@@ -10,8 +10,6 @@ const envSchema = z.object({
   API_FOOTBALL_BASE_URL: z.url().default("https://v3.football.api-sports.io"),
   ODDS_API_KEY: z.string().default(""),
   ODDS_API_BASE_URL: z.url().default("https://api.the-odds-api.com/v4"),
-  FOOTBALL_DATA_API_KEY: z.string().default(""),
-  FOOTBALL_DATA_BASE_URL: z.url().default("https://api.football-data.org/v4"),
 });
 
 const parsedEnv = envSchema.parse({
@@ -20,8 +18,6 @@ const parsedEnv = envSchema.parse({
   API_FOOTBALL_BASE_URL: process.env.API_FOOTBALL_BASE_URL,
   ODDS_API_KEY: process.env.ODDS_API_KEY,
   ODDS_API_BASE_URL: process.env.ODDS_API_BASE_URL,
-  FOOTBALL_DATA_API_KEY: process.env.FOOTBALL_DATA_API_KEY,
-  FOOTBALL_DATA_BASE_URL: process.env.FOOTBALL_DATA_BASE_URL,
 });
 
 export const env = {

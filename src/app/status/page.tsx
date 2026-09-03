@@ -38,7 +38,7 @@ export default async function StatusPage() {
 
       <section className="card mb-6 p-5">
         <h2 className="mb-4 text-xl font-semibold">API Keys</h2>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-line bg-surface-muted p-3">
             <p className="mb-2 text-sm font-medium">API-Football</p>
             <Badge ok={status.keys.apiFootball} />
@@ -46,10 +46,6 @@ export default async function StatusPage() {
           <div className="rounded-lg border border-line bg-surface-muted p-3">
             <p className="mb-2 text-sm font-medium">The Odds API</p>
             <Badge ok={status.keys.oddsApi} />
-          </div>
-          <div className="rounded-lg border border-line bg-surface-muted p-3">
-            <p className="mb-2 text-sm font-medium">Football-Data</p>
-            <Badge ok={status.keys.footballData} />
           </div>
         </div>
       </section>
