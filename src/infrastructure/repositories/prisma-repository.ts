@@ -158,7 +158,7 @@ export class PrismaMatchRepository implements MatchRepository {
           notes: "Local sync run",
         },
       });
-    });
+    }, { timeout: 45_000, maxWait: 10_000 });
   }
 
   async getPersistedMatches(variant?: GameVariant, roundCode?: string): Promise<MatchInput[]> {
