@@ -1,3 +1,4 @@
+import { startOfISOWeek } from "date-fns";
 import { env } from "@/config/env";
 import { GameVariant } from "@/domain/enums";
 import type { MatchInput } from "@/domain/types";
@@ -344,25 +345,19 @@ function selectUpcomingRounds(events: CachedEvent[], maxRounds: number): CachedE
   }
 
   const sorted = [...events].sort((left, right) => Date.parse(left.commenceTime) - Date.parse(right.commenceTime));
-  const groupedRounds: CachedEvent[][] = [];
-  let currentRound: CachedEvent[] = [sorted[0]];
+  const groups = new Map<number, CachedEvent[]>();
 
-  for (let index = 1; index < sorted.length; index += 1) {
-    const previousKickoff = Date.parse(sorted[index - 1].commenceTime);
-    const nextKickoff = Date.parse(sorted[index].commenceTime);
-    const hourGap = (nextKickoff - previousKickoff) / (1000 * 60 * 60);
-
-    if (hourGap > 72) {
-      groupedRounds.push(currentRound);
-      currentRound = [sorted[index]];
-      continue;
+  for (const event of sorted) {
+    const weekKey = startOfISOWeek(new Date(event.commenceTime)).getTime();
+    const bucket = groups.get(weekKey);
+    if (bucket) {
+      bucket.push(event);
+    } else {
+      groups.set(weekKey, [event]);
     }
-
-    currentRound.push(sorted[index]);
   }
 
-  groupedRounds.push(currentRound);
-  return groupedRounds.slice(0, maxRounds).flat();
+  return Array.from(groups.values()).slice(0, maxRounds).flat();
 }
 
 async function requestOddsApi<T>(path: string): Promise<T> {

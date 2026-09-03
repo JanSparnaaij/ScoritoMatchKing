@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, startOfISOWeek } from "date-fns";
 import { buildMatchPrediction } from "@/application/services/prediction-service";
 import { GameVariant, StrategyType } from "@/domain/enums";
 import type { MatchRepository } from "@/infrastructure/repositories/contracts";
@@ -69,25 +69,19 @@ function splitIntoMatchRounds(matches: Awaited<ReturnType<MatchRepository["getUp
   }
 
   const sorted = [...matches].sort((left, right) => Date.parse(left.kickOffUtc) - Date.parse(right.kickOffUtc));
-  const rounds: typeof matches[] = [];
-  let currentRound: typeof matches = [sorted[0]];
+  const groups = new Map<number, typeof matches>();
 
-  for (let index = 1; index < sorted.length; index += 1) {
-    const previousKickoff = Date.parse(sorted[index - 1].kickOffUtc);
-    const nextKickoff = Date.parse(sorted[index].kickOffUtc);
-    const hourGap = (nextKickoff - previousKickoff) / (1000 * 60 * 60);
-
-    if (hourGap > 72) {
-      rounds.push(currentRound);
-      currentRound = [sorted[index]];
-      continue;
+  for (const match of sorted) {
+    const weekKey = startOfISOWeek(new Date(match.kickOffUtc)).getTime();
+    const bucket = groups.get(weekKey);
+    if (bucket) {
+      bucket.push(match);
+    } else {
+      groups.set(weekKey, [match]);
     }
-
-    currentRound.push(sorted[index]);
   }
 
-  rounds.push(currentRound);
-  return rounds.slice(0, 4);
+  return Array.from(groups.values()).slice(0, 4);
 }
 
 function formatRoundDateRange(matches: Awaited<ReturnType<MatchRepository["getUpcoming"]>>): string {
