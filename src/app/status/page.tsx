@@ -28,15 +28,6 @@ export default async function StatusPage() {
       </section>
 
       <section className="card mb-6 p-5">
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="rounded-full bg-surface-muted px-3 py-1">Mode: {status.mode}</span>
-          <span className="rounded-full bg-surface-muted px-3 py-1">
-            External sync: {status.externalSyncEnabled ? "enabled" : "disabled"}
-          </span>
-        </div>
-      </section>
-
-      <section className="card mb-6 p-5">
         <h2 className="mb-4 text-xl font-semibold">API Keys</h2>
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-line bg-surface-muted p-3">

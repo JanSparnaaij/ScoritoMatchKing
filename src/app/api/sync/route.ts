@@ -21,7 +21,6 @@ export async function POST(request: Request) {
       syncedPlayers: result.syncedPlayers,
       predictionCount: result.predictionCount,
       roundCode: result.roundCode,
-      externalSyncEnabled: process.env.ENABLE_EXTERNAL_SYNC === "true",
       syncedAt: result.syncedAt,
     });
   } catch (error) {

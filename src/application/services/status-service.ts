@@ -10,12 +10,10 @@ export async function getLocalStatus() {
   });
 
   return {
-    mode: "local",
     keys: {
       apiFootball: isConfigured(process.env.API_FOOTBALL_KEY),
       oddsApi: isConfigured(process.env.ODDS_API_KEY),
     },
-    externalSyncEnabled: process.env.ENABLE_EXTERNAL_SYNC === "true",
     latestSync: latestSync
       ? {
           roundCode: latestSync.roundCode,
