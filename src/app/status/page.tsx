@@ -54,7 +54,6 @@ export default async function StatusPage() {
             <p>Matches: {status.latestSync.matches}</p>
             <p>Players: {status.latestSync.players}</p>
             <p>Predictions: {status.latestSync.predictions}</p>
-            <p>Source: {status.latestSync.source}</p>
           </div>
         )}
       </section>

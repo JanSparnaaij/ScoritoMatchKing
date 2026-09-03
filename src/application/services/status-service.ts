@@ -21,7 +21,6 @@ export async function getLocalStatus() {
           matches: latestSync.matchesCount,
           players: latestSync.playersCount,
           predictions: latestSync.predictionsCount,
-          source: latestSync.source,
         }
       : null,
   };
