@@ -105,7 +105,7 @@ export async function GamePageContent({ variant, title, subtitle, selectedRound 
             <p className="text-sm text-slate-600">
               {showKkdAvailabilityMessage
                 ? "Nog geen KKD wedstrijden beschikbaar via de gekoppelde API's."
-                : `Nog geen wedstrijden voor ${variant}. Klik op \"Sync nu via API\".`}
+                : `Nog geen wedstrijden voor ${variant}. Klik op "Sync nu via API".`}
             </p>
           ) : (
             <div className="grid gap-2 md:grid-cols-2">
