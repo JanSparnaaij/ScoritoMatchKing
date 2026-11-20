@@ -7,7 +7,8 @@
   },
   "overrides": {
     "@prisma/config": {
-      "deepmerge-ts": "8.0.2"
+      "deepmerge-ts": "8.0.2",
+      "effect": "3.22.5"
     }
   },
   "scripts": {
@@ -28,10 +29,10 @@
     "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
-    "next": "16.3.8",
+    "next": "16.4.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -39,15 +40,15 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitest/coverage-v8": "^4.1.11",
-    "@vitest/ui": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.12",
+    "@vitest/ui": "^4.1.12",
     "eslint": "^9.39.5",
     "magicast": "0.3.5",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.8",
     "typescript": "^5",
-    "typescript-eslint": "^8.71.1",
-    "vitest": "^4.1.11"
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^4.1.12"
   }
 }
